@@ -39,31 +39,31 @@ export default class InsertTimePlugin extends Plugin {
         this.protyleSlash = [
             {
                 filter: ['sj', 'time'],
-                html: `<span id="time">Time: ${now(false, true)}</span>`,
+                html: `<span id="time">${this.i18n.time} ${now(false, true)}</span>`,
                 id: 'time',
                 callback: (protyle: Protyle) => {
                     let strnow = now(false, true);
-                    console.log(strnow);
+                    console.log(this.i18n.time, strnow);
                     protyle.insert(strnow, false);
                 }
             },
             {
                 filter: ['rq', 'date', 'jt', 'today'],
-                html: `<span id="date">Date: ${now(true, false)}</span>`,
+                html: `<span id="date">${this.i18n.date} ${now(true, false)}</span>`,
                 id: 'date',
                 callback: (protyle: Protyle) => {
                     let strnow = now(true, false);
-                    console.log(strnow);
+                    console.log(this.i18n.date, strnow);
                     protyle.insert(strnow, false);
                 }
             },
             {
                 filter: ['xz', 'now'],
-                html: `<span id="datetime">Now: ${now()}</span>`,
-                id: 'date',
+                html: `<span id="datetime">${this.i18n.now} ${now()}</span>`,
+                id: 'now',
                 callback: (protyle: Protyle) => {
                     let strnow = now();
-                    console.log(strnow);
+                    console.log(this.i18n.now, strnow);
                     protyle.insert(strnow, false);
                 }
             }

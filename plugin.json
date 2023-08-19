@@ -1,18 +1,18 @@
 {
-  "name": "plugin-sample-vite",
+  "name": "sy-insert-time",
   "author": "frostime",
-  "url": "https://github.com/frostime/plugin-sample-vite",
+  "url": "https://github.com/frostime/sy-insert-time",
   "version": "0.1.12",
   "minAppVersion": "2.9.0",
   "backends": ["all"],
   "frontends": ["all"],
   "displayName": {
-    "en_US": "Plugin sample with vite",
-    "zh_CN": "插件样例 vite 版"
+    "en_US": "Insert time",
+    "zh_CN": "插入时间"
   },
   "description": {
-    "en_US": "SiYuan plugin sample with vite",
-    "zh_CN": "使用 vite 开发的思源插件样例"
+    "en_US": "Insert current time in editor",
+    "zh_CN": "在编辑器中快速插入当前的时间"
   },
   "readme": {
     "en_US": "README.md",

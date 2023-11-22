@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2023 by Yp Z (frostime). All Rights Reserved.
- * @Author       : Yp Z
+ * Copyright (c) 2023 by frostime. All Rights Reserved.
+ * @Author       : frostime
  * @Date         : 2023-08-19 18:51:23
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2023-08-19 19:55:30
+ * @LastEditTime : 2023-11-22 14:25:27
  * @Description  : 
  */
 import {
@@ -11,81 +11,76 @@ import {
     Protyle
 } from "siyuan";
 
-let i18n;
+
+const renderString = (template: string, data: { [key: string]: string }) => {
+    for (let key in data) {
+        template = template.replace(key, data[key]);
+    }
+    return template;
+}
+
+const formatDateTime = (template: string, now?: Date) => {
+    now = now || new Date();
+    let year = now.getFullYear();
+    let month = now.getMonth() + 1;
+    let day = now.getDate();
+    let hour = now.getHours();
+    let minute = now.getMinutes();
+    let second = now.getSeconds();
+    return renderString(template, {
+        'yyyy': year.toString(),
+        'MM': month.toString().padStart(2, '0'),
+        'dd': day.toString().padStart(2, '0'),
+        'HH': hour.toString().padStart(2, '0'),
+        'mm': minute.toString().padStart(2, '0'),
+        'ss': second.toString().padStart(2, '0'),
+        'yy': year.toString().slice(-2),
+    });
+}
 
 
 export default class InsertTimePlugin extends Plugin {
 
     updateBindThis = this.update.bind(this);
 
+    Templates: any[];
+
     onload() {
-        i18n = this.i18n;
-        const now = (date = true, time = true) => {
-            let now = new Date();
-            let year = now.getFullYear();
-            let month = now.getMonth() + 1;
-            let day = now.getDate();
-            let hour = now.getHours();
-            let minute = now.getMinutes();
-            let second = now.getSeconds();
-            let result = '';
 
-            let strdate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-            let strtime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}`;
-            if (date && time) {
-                result = `${strdate} ${strtime}`;
-            } else if (date) {
-                result = strdate;
-            } else if (time) {
-                result = strtime;
-            }
-            return result;
-        }
-
-        this.protyleSlash = [
+        this.Templates = [
             {
                 filter: ['sj', 'time'],
-                html: `<span id="time">${this.i18n.time} ${now(false, true)}</span>`,
-                id: 'time',
-                callback: (protyle: Protyle) => {
-                    let strnow = now(false, true);
-                    console.log(this.i18n.time, strnow);
-                    protyle.insert(strnow, false);
-                },
-                //@ts-ignore
-                update() {
-                    this.html = `<span id="time">${i18n.time} ${now(false, true)}</span>`;
-                }
+                name: this.i18n.time,
+                template: 'HH:mm:ss'
             },
             {
                 filter: ['rq', 'date', 'jt', 'today'],
-                html: `<span id="date">${this.i18n.date} ${now(true, false)}</span>`,
-                id: 'date',
-                callback: (protyle: Protyle) => {
-                    let strnow = now(true, false);
-                    console.log(this.i18n.date, strnow);
-                    protyle.insert(strnow, false);
-                },
-                //@ts-ignore
-                update() {
-                    this.html = `<span id="date">${i18n.date} ${now(true, false)}</span>`;
-                }
+                name: this.i18n.date,
+                template: 'yyyy-MM-dd'
             },
             {
                 filter: ['xz', 'now'],
-                html: `<span id="datetime">${this.i18n.now} ${now()}</span>`,
-                id: 'now',
+                name: this.i18n.now,
+                template: 'yyyy-MM-dd HH:mm:ss'
+            }
+        ]
+
+        this.protyleSlash = this.Templates.map((template) => {
+            return {
+                filter: template.filter,
+                html: `<span>${template.name} ${formatDateTime(template.template)}</span>`,
+                id: template.name,
                 callback: (protyle: Protyle) => {
-                    let strnow = now();
-                    console.log(this.i18n.now, strnow);
+                    let strnow = formatDateTime(template.template);
+                    console.log(template.name, strnow);
                     protyle.insert(strnow, false);
                 },
                 //@ts-ignore
                 update() {
-                    this.html = `<span id="datetime">${i18n.now} ${now()}</span>`;
+                    this.html = `<span>${template.name} ${formatDateTime(template.template)}</span>`;
                 }
             }
-        ]
+        })
 
         window.addEventListener('keypress', this.updateBindThis);
     }

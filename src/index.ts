@@ -3,7 +3,7 @@
  * @Author       : frostime
  * @Date         : 2023-08-19 18:51:23
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2023-11-22 14:25:27
+ * @LastEditTime : 2023-11-22 14:42:45
  * @Description  : 
  */
 import {
@@ -43,29 +43,40 @@ export default class InsertTimePlugin extends Plugin {
 
     updateBindThis = this.update.bind(this);
 
-    Templates: any[];
+    Templates: {[key: string]: {filter: string[], name: string, template: string}} = {};
 
-    onload() {
+    async onload() {
 
-        this.Templates = [
-            {
-                filter: ['sj', 'time'],
-                name: this.i18n.time,
-                template: 'HH:mm:ss'
+        this.Templates = {
+            datetime: {
+                filter: ['xz', 'now'],
+                name: this.i18n.now,
+                template: 'yyyy-MM-dd HH:mm:ss'
             },
-            {
+            date: {
                 filter: ['rq', 'date', 'jt', 'today'],
                 name: this.i18n.date,
                 template: 'yyyy-MM-dd'
             },
-            {
-                filter: ['xz', 'now'],
-                name: this.i18n.now,
-                template: 'yyyy-MM-dd HH:mm:ss'
+            time: {
+                filter: ['sj', 'time'],
+                name: this.i18n.time,
+                template: 'HH:mm:ss'
             }
-        ]
+        };
 
-        this.protyleSlash = this.Templates.map((template) => {
+        await this.load();
+        this.updateSlash();
+        window.addEventListener('keypress', this.updateBindThis);
+    }
+
+    onunload() {
+        window.removeEventListener('keypress', this.updateBindThis);
+        this.saveData('templates.json', this.Templates);
+    }
+
+    updateSlash() {
+        this.protyleSlash = Object.values(this.Templates).map((template) => {
             return {
                 filter: template.filter,
                 html: `<span>${template.name} ${formatDateTime(template.template)}</span>`,
@@ -80,13 +91,18 @@ export default class InsertTimePlugin extends Plugin {
                     this.html = `<span>${template.name} ${formatDateTime(template.template)}</span>`;
                 }
             }
-        })
-
-        window.addEventListener('keypress', this.updateBindThis);
+        });
     }
 
-    onunload() {
-        window.removeEventListener('keypress', this.updateBindThis);
+    async load() {
+        let data = await this.loadData('templates.json');
+        if (data !== undefined && data !== null) {
+            for (let id in this.Templates) {
+                if (data[id] !== undefined) {
+                    this.Templates[id] = data[id];
+                }
+            }
+        }
     }
 
     update(e) {

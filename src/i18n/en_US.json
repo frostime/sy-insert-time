@@ -1,5 +1,8 @@
 {
-    "now": "Now:",
-    "date": "Date:",
-    "time": "Time:"
+    "now": "Now",
+    "date": "Date",
+    "time": "Time",
+    "template": "Template",
+    "filter": "Filter",
+    "description": "Template: Inserted time-string's template, yyyy-MM-dd HH:mm:ss stands for 2020-01-01 12:00:00<br>Filter: Prompt after /, seperated by ','"
 }

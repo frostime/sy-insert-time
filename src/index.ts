@@ -3,7 +3,7 @@
  * @Author       : frostime
  * @Date         : 2023-08-19 18:51:23
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2023-11-22 15:46:33
+ * @LastEditTime : 2023-11-22 16:01:35
  * @Description  : 
  */
 import {
@@ -13,7 +13,8 @@ import {
 } from "siyuan";
 
 import "./index.scss";
-import { title } from "process";
+
+let I18n = null;
 
 
 const renderString = (template: string, data: { [key: string]: string }) => {
@@ -51,6 +52,8 @@ export default class InsertTimePlugin extends Plugin {
 
     async onload() {
 
+        I18n = this.i18n;
+
         this.Templates = {
             datetime: {
                 filter: ['xz', 'now'],
@@ -80,11 +83,11 @@ export default class InsertTimePlugin extends Plugin {
                 const config_items: NodeListOf<HTMLElement> = document.querySelectorAll('.plugin-insert-time__conf-item');
                 for (let ele of config_items) {
                     const key = ele.dataset.key;
-                    const name = ele.dataset.name;
                     const template = (<HTMLInputElement>ele.querySelector('#template')).value;
                     const filter = (<HTMLInputElement>ele.querySelector('#filter')).value.split(',').map((item) => item.trim());
-                    this.Templates[key] = { name, template, filter };
-                    console.debug(key, name, template, filter);
+                    this.Templates[key].template = template;
+                    this.Templates[key].filter = filter;
+                    console.debug(key, template, filter);
                 }
                 this.updateSlash();
                 this.saveData('templates.json', this.Templates);
@@ -92,7 +95,7 @@ export default class InsertTimePlugin extends Plugin {
         });
         this.setting.addItem({
             title: '<span style="color: var(--b3-theme-primary); font-size: 1.25em; font-weight: bold">Hint</span>',
-            description: `插入模板: 时间的格式化模板, 如 yyyy-MM-dd HH:mm:ss 表示 2020-01-01 12:00:00<br>输入指令: / 后面跟的指令, 多种指令使用 , 号分隔`
+            description: this.i18n.description
         })
         for (let key in this.Templates) {
             const Templates = this.Templates;
@@ -103,7 +106,7 @@ export default class InsertTimePlugin extends Plugin {
                     const html = `
                     <div class="fn__flex-column plugin-insert-time__conf-item" data-key="${key}" data-name="${template.name}">
                         <div class="form-row">
-                            <span display="inline-block">插入模板</span>
+                            <span display="inline-block">${I18n.template}</span>
                             <div class="fn__space"></div>
                             <input
                                 class="b3-text-field fn__flex-center fn__size200"
@@ -111,7 +114,7 @@ export default class InsertTimePlugin extends Plugin {
                             />
                         </div>
                         <div class="form-row">
-                            <span display="inline-block">输入指令</span>
+                            <span display="inline-block">${I18n.filter}</span>
                             <div class="fn__space"></div>
                             <input
                                 class="b3-text-field fn__flex-center fn__size200"
@@ -159,7 +162,8 @@ export default class InsertTimePlugin extends Plugin {
         if (data !== undefined && data !== null) {
             for (let id in this.Templates) {
                 if (data[id] !== undefined) {
-                    this.Templates[id] = data[id];
+                    this.Templates[id].template = data[id]?.template || this.Templates[id].template;
+                    this.Templates[id].filter = data[id]?.filter || this.Templates[id].filter;
                 }
             }
         }

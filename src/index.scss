@@ -2,5 +2,10 @@ div.plugin-insert-time__conf-item {
     div.form-row {
         display: flex;
         align-items: center;
+        margin: 2px auto;
+        >span:first-child {
+            width: 5em;
+            text-align: left;
+        }
     }
 }

@@ -3,7 +3,7 @@
  * @Author       : frostime
  * @Date         : 2023-12-17 18:28:19
  * @FilePath     : /src/libs/setting-utils.ts
- * @LastEditTime : 2024-04-30 20:51:27
+ * @LastEditTime : 2024-04-30 21:42:40
  * @Description  : 
  */
 
@@ -86,7 +86,7 @@ export class SettingUtils {
     constructor(args: {
         plugin: Plugin,
         name?: string,
-        callback?: (data: any) => void,
+        callback?: (data: any) => any,
         width?: string,
         height?: string
     }) {
@@ -102,7 +102,8 @@ export class SettingUtils {
                 }
                 let data = this.dump();
                 if (args.callback !== undefined) {
-                    args.callback(data);
+                    let ans = args.callback(data);
+                    data = ans ?? data;
                 }
                 this.plugin.data[this.name] = data;
                 this.save();
@@ -355,7 +356,7 @@ export class SettingUtils {
                 break;
             case 'hint':
                 let hintElement: HTMLElement = document.createElement('div');
-                hintElement.className = 'b3-label fn__flex-center';
+                // hintElement.className = 'b3-label fn__flex-center';
                 itemElement = hintElement;
                 break;
         }

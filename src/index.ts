@@ -3,7 +3,7 @@
  * @Author       : frostime
  * @Date         : 2023-08-19 18:51:23
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2023-11-22 16:01:35
+ * @LastEditTime : 2024-04-30 20:49:12
  * @Description  : 
  */
 import {
@@ -32,6 +32,7 @@ const formatDateTime = (template: string, now?: Date) => {
     let hour = now.getHours();
     let minute = now.getMinutes();
     let second = now.getSeconds();
+
     return renderString(template, {
         'yyyy': year.toString(),
         'MM': month.toString().padStart(2, '0'),

@@ -4,5 +4,5 @@
     "time": "Time",
     "template": "Template",
     "filter": "Filter",
-    "description": "Template: Inserted time-string's template, yyyy-MM-dd HH:mm:ss stands for 2020-01-01 12:00:00<br>Filter: Prompt after /, seperated by ','"
+    "description": "This plugin allows you to quickly insert the time into the editor using the \"/\" command. The following configurations are for different time templates.<br> <b>Name</b>: The name of the template.<br> <b>Filter</b>: The command name that follows \"/\", multiple commands are separated by a \",\".<br> <b>Template</b>: The formatted template for the time, for example, yyyy-MM-dd HH:mm:ss represents 2020-01-01 12:00:00."
 }

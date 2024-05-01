@@ -3,7 +3,7 @@
  * @Author       : frostime
  * @Date         : 2023-08-19 18:51:23
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2024-05-01 15:04:48
+ * @LastEditTime : 2024-05-01 15:21:02
  * @Description  : 
  */
 import {
@@ -83,7 +83,7 @@ export default class InsertTimePlugin extends Plugin {
         settings = new SettingUtils({
             plugin: this,
             name: 'templates.json',
-            width: '900px',
+            width: '700px',
             height: '600px',
             callback: (data) => {
                 delete data['hint'];

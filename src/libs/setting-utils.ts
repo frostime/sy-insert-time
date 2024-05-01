@@ -3,7 +3,7 @@
  * @Author       : frostime
  * @Date         : 2023-12-17 18:28:19
  * @FilePath     : /src/libs/setting-utils.ts
- * @LastEditTime : 2024-04-30 21:42:40
+ * @LastEditTime : 2024-04-30 22:14:33
  * @Description  : 
  */
 
@@ -106,7 +106,7 @@ export class SettingUtils {
                     data = ans ?? data;
                 }
                 this.plugin.data[this.name] = data;
-                this.save();
+                this.save(data);
             },
             destroyCallback: () => {
                 //Restore the original value
@@ -129,8 +129,8 @@ export class SettingUtils {
         return data;
     }
 
-    async save() {
-        let data = this.dump();
+    async save(data?: any) {
+        data = data ?? this.dump();
         await this.plugin.saveData(this.file, this.dump());
         console.debug('Save config:', data);
         return data;

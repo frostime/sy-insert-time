@@ -2,8 +2,8 @@
  Copyright (c) 2024 by frostime. All Rights Reserved.
  Author       : frostime
  Date         : 2024-06-01 20:03:50
- FilePath     : /src/libs/components/item-wrap.svelte
- LastEditTime : 2024-07-19 15:28:57
+ FilePath     : /src/components/Form/form-wrap.svelte
+ LastEditTime : 2024-08-18 23:27:03
  Description  : The setting item container
 -->
 <script lang="ts">
@@ -15,7 +15,7 @@
 {#if direction === "row"}
     <div class="item-wrap b3-label" data-key="CustomCSS">
         <div class="fn__block">
-            <span class="title">{title}</span>
+            <span class="title">{@html title}</span>
             <div class="b3-label__text">{@html description}</div>
             <div class="fn__hr"></div>
             <div style="display: flex; flex-direction: column; gap: 5px; position: relative;">
@@ -26,7 +26,7 @@
 {:else}
     <div class="item-wrap fn__flex b3-label config__item">
         <div class="fn__flex-1">
-            <span class="title">{title}</span>
+            <span class="title">{@html title}</span>
             <div class="b3-label__text">
                 {@html description}
             </div>

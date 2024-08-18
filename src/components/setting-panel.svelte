@@ -2,50 +2,51 @@
  Copyright (c) 2023 by frostime All Rights Reserved.
  Author       : frostime
  Date         : 2023-07-01 19:23:50
- FilePath     : /src/libs/components/setting-panel.svelte
- LastEditTime : 2024-08-09 21:41:07
+ FilePath     : /src/components/setting-panel.svelte
+ LastEditTime : 2024-08-18 23:52:01
  Description  : 
 -->
 <script lang="ts">
-    import { createEventDispatcher } from "svelte";
-    import Form from './Form';
+    import { i18n } from "@/libs/const";
+    import useTemplates from "@/libs/store";
+    import Form from "./Form";
+    import { setContext } from "svelte";
 
-    export let group: string;
-    export let settingItems: ISettingItem[];
-    export let display: boolean = true;
+    import TemplateItem from "./template-item.svelte";
 
-    const dispatch = createEventDispatcher();
+    export let TemplatesStore: ReturnType<typeof useTemplates>;
+    const templates = TemplatesStore.templates;
 
-    function onClick( {detail}) {
-        dispatch("click", { key: detail.key });
-    }
-    function onChanged( {detail}) {
-        dispatch("changed", {group: group, ...detail});
-    }
+    $: templateList = Object.entries($templates).map(([key, value]) => {
+        return {
+            key,
+            value,
+        };
+    });
 
-    $: fn__none = display ? "" : "fn__none";
-
+    setContext("TemplatesStore", TemplatesStore);
 </script>
 
-<div class="config__tab-container {fn__none}" data-name={group}>
-    <slot />
-    {#each settingItems as item (item.key)}
-        <Form.Wrap
-            title={item.title}
-            description={item.description}
-            direction={item?.direction}
-        > 
-            <Form.Input
-                type={item.type}
-                key={item.key}
-                bind:value={item.value}
-                placeholder={item?.placeholder}
-                options={item?.options}
-                slider={item?.slider}
-                button={item?.button}
-                on:click={onClick}
-                on:changed={onChanged}
+<div class="config__tab-container fn__flex-1">
+    <Form.Wrap
+        title={'<span style="color: var(--b3-theme-primary); font-size: 1.25em; font-weight: bold">Hint</span>'}
+        description={i18n.description}
+        direction="row"
+    >
+        {#each templateList as template}
+            <TemplateItem
+                key={template.key}
+                template={template.value}
             />
-        </Form.Wrap>
-    {/each}
+        {/each}
+
+        <div style="margin-top: 10px; text-align: right;">
+            <button
+                class:b3-button={true}
+                on:click={() => TemplatesStore.reset()}
+            >
+                重置
+            </button>
+        </div>
+    </Form.Wrap>
 </div>

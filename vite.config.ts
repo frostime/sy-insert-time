@@ -3,13 +3,14 @@ import { defineConfig, loadEnv } from "vite"
 import minimist from "minimist"
 import { viteStaticCopy } from "vite-plugin-static-copy"
 import livereload from "rollup-plugin-livereload"
+import { svelte } from "@sveltejs/vite-plugin-svelte"
 import zipPack from "vite-plugin-zip-pack";
 import fg from 'fast-glob';
 
 const args = minimist(process.argv.slice(2))
 const isWatch = args.watch || args.w || false
-const devDistDir = "./dev"
-const distDir = isWatch ? devDistDir : "./dist"
+const devDistDir = "dev"
+const distDir = isWatch ? devDistDir : "dist"
 
 console.log("isWatch=>", isWatch)
 console.log("distDir=>", distDir)
@@ -22,6 +23,7 @@ export default defineConfig({
     },
 
     plugins: [
+        svelte(),
 
         viteStaticCopy({
             targets: [
@@ -30,7 +32,7 @@ export default defineConfig({
                     dest: "./",
                 },
                 {
-                    src: "./icon.png",
+                    src: "./plugin.json",
                     dest: "./",
                 },
                 {
@@ -38,7 +40,7 @@ export default defineConfig({
                     dest: "./",
                 },
                 {
-                    src: "./plugin.json",
+                    src: "./icon.png",
                     dest: "./",
                 },
                 {
@@ -55,6 +57,7 @@ export default defineConfig({
     // 在这里自定义变量
     define: {
         "process.env.DEV_MODE": `"${isWatch}"`,
+        "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV)
     },
 
     build: {
@@ -63,7 +66,7 @@ export default defineConfig({
         emptyOutDir: false,
 
         // 构建后是否生成 source map 文件
-        sourcemap: false,
+        sourcemap: isWatch ? 'inline' : false,
 
         // 设置为 false 可以禁用最小化混淆
         // 或是用来指定是应用哪种混淆器

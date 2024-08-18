@@ -3,7 +3,7 @@
  * @Author       : frostime
  * @Date         : 2023-08-19 18:51:23
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2024-05-01 15:21:02
+ * @LastEditTime : 2024-08-18 22:33:54
  * @Description  : 
  */
 import {
@@ -32,6 +32,12 @@ const formatDateTime = (template: string, now?: Date) => {
     let hour = now.getHours();
     let minute = now.getMinutes();
     let second = now.getSeconds();
+    let weekday = now.getDay(); // 0 (Sunday) to 6 (Saturday)
+
+    // 星期的中文表示
+    const weekdaysInChinese = ["日", "一", "二", "三", "四", "五", "六"];
+    const weekdaysInEnglishFull = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const weekdaysInEnglishShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     return renderString(template, {
         'yyyy': year.toString(),
@@ -41,10 +47,37 @@ const formatDateTime = (template: string, now?: Date) => {
         'mm': minute.toString().padStart(2, '0'),
         'ss': second.toString().padStart(2, '0'),
         'yy': year.toString().slice(-2),
+        'e': (weekday === 0 ? 7 : weekday).toString(),
+        'E': weekdaysInEnglishShort[weekday],
+        'EEEE': weekdaysInEnglishFull[weekday],
+        'ECN': weekdaysInChinese[weekday],
     });
 }
 
 let settings: SettingUtils;
+
+const DefaultTemplates = () => {
+    return {
+        datetime: {
+            filter: ['xz', 'now'],
+            name: I18n.now,
+            enabled: true,
+            template: 'yyyy-MM-dd HH:mm:ss'
+        },
+        date: {
+            filter: ['rq', 'date', 'jt', 'today'],
+            name: I18n.date,
+            enabled: true,
+            template: 'yyyy-MM-dd'
+        },
+        time: {
+            filter: ['sj', 'time'],
+            name: I18n.time,
+            enabled: true,
+            template: 'HH:mm:ss'
+        }
+    }
+}
 
 export default class InsertTimePlugin extends Plugin {
 
@@ -56,26 +89,7 @@ export default class InsertTimePlugin extends Plugin {
 
         I18n = this.i18n;
 
-        this.Templates = {
-            datetime: {
-                filter: ['xz', 'now'],
-                name: this.i18n.now,
-                enabled: true,
-                template: 'yyyy-MM-dd HH:mm:ss'
-            },
-            date: {
-                filter: ['rq', 'date', 'jt', 'today'],
-                name: this.i18n.date,
-                enabled: true,
-                template: 'yyyy-MM-dd'
-            },
-            time: {
-                filter: ['sj', 'time'],
-                name: this.i18n.time,
-                enabled: true,
-                template: 'HH:mm:ss'
-            }
-        };
+        this.Templates = DefaultTemplates();
 
         await this.load();
         this.updateSlash();

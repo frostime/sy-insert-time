@@ -3,7 +3,7 @@
  Author       : frostime
  Date         : 2023-07-01 19:23:50
  FilePath     : /src/components/setting-panel.svelte
- LastEditTime : 2024-08-18 23:52:01
+ LastEditTime : 2024-08-19 00:45:57
  Description  : 
 -->
 <script lang="ts">
@@ -13,6 +13,7 @@
     import { setContext } from "svelte";
 
     import TemplateItem from "./template-item.svelte";
+    import { confirm } from "siyuan";
 
     export let TemplatesStore: ReturnType<typeof useTemplates>;
     const templates = TemplatesStore.templates;
@@ -43,9 +44,30 @@
         <div style="margin-top: 10px; text-align: right;">
             <button
                 class:b3-button={true}
-                on:click={() => TemplatesStore.reset()}
+                on:click={() => {
+                    confirm('确认重置?', '所有模板会被重置为默认配置', () => {
+                        TemplatesStore.reset();
+                    });
+                }}
+                style="background-color: var(--b3-card-error-background); color: var(--b3-card-error-color);"
             >
                 重置
+            </button>
+            <button
+                class:b3-button={true}
+                on:click={() => {
+                    //window prompts
+                    let title = window.Lute.NewNodeID();
+                    // if (title === '') return;
+                    TemplatesStore.set(title, {
+                        name: 'Template',
+                        filter: [title],
+                        template: 'yyyy-MM-dd HH:mm:ss',
+                        enabled: true
+                    });
+                }}
+            >
+                新建
             </button>
         </div>
     </Form.Wrap>

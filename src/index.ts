@@ -3,7 +3,7 @@
  * @Author       : frostime
  * @Date         : 2023-08-19 18:51:23
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2024-08-19 00:16:57
+ * @LastEditTime : 2024-08-19 00:51:11
  * @Description  : 
  */
 import {
@@ -96,7 +96,7 @@ export default class InsertTimePlugin extends Plugin {
                     }
                 });
             },
-            width: '700px',
+            width: '750px',
             height: '600px',
             callback: () => {
                 this.updateSlash();
@@ -135,13 +135,13 @@ export default class InsertTimePlugin extends Plugin {
     async load() {
         let data = await this.loadData('templates.json');
         console.log('Load data', data);
-        const keys = this.TemplatesStore.keys();
+        // const DefaultKeys = this.TemplatesStore.keys();
         if (data !== undefined && data !== null) {
-            for (let id of keys) {
-                if (data[id] !== undefined) {
-                    this.TemplatesStore.update(id, data[id]);
-                }
-            }
+            let keys = Object.keys(data);
+            this.TemplatesStore.clear();
+            keys.forEach((key) => {
+                this.TemplatesStore.set(key, data[key]);
+            });
         }
     }
 

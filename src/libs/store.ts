@@ -1,5 +1,6 @@
 import { get, writable } from "svelte/store"
 import { i18n } from "./const"
+import { clear } from "console";
 
 export interface ITemplate {
     name: string;
@@ -35,7 +36,7 @@ export const DefaultTemplates = (): Record<string, ITemplate> => {
 export const useTemplates = (iniVal: Record<string, ITemplate>) => {
     const templates_ = writable<Record<string, ITemplate>>(iniVal);
     let keys_ = Object.keys(iniVal);
-    return {
+    let hook = {
         templates: templates_,
         keys: () => keys_,
         reset: () => {
@@ -45,16 +46,24 @@ export const useTemplates = (iniVal: Record<string, ITemplate>) => {
         },
         dump: () => get(templates_),
         update: (key: string, value: ITemplate) => {
+            if (!keys_.includes(key)) {
+                hook.set(key, value);
+                return;
+            }
             templates_.update(t => {
-                t[key].name = value.name || t[key].name;
+                t[key].name = value.name ?? t[key].name;
                 t[key].enabled = value.enabled ?? t[key].enabled;
-                t[key].template = value.template || t[key].template;
-                t[key].filter = value.filter || t[key].filter;
+                t[key].template = value.template ?? t[key].template;
+                t[key].filter = value.filter ?? t[key].filter;
                 return t;
             });
-            if (!keys_.includes(key)) {
-                keys_.push(key);
-            }
+        },
+        set: (key: string, value: ITemplate) => {
+            templates_.update(t => {
+                t[key] = value;
+                return t;
+            });
+            keys_.push(key);
         },
         remove: (key: string) => {
             templates_.update(t => {
@@ -63,13 +72,18 @@ export const useTemplates = (iniVal: Record<string, ITemplate>) => {
             });
             keys_ = keys_.filter(k => k !== key);
         },
+        clear: () => {
+            templates_.set({});
+            keys_ = [];
+        },
         iterate: (fn: (key: string, value: ITemplate) => void) => {
             let templates = get(templates_);
             for (let key of keys_) {
                 fn(key, templates[key]);
             }
         }
-    }
+    };
+    return hook;
 }
 
 export default useTemplates;

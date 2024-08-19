@@ -3,7 +3,7 @@
  * @Author       : frostime
  * @Date         : 2023-08-19 18:51:23
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2024-08-19 00:51:11
+ * @LastEditTime : 2024-08-19 11:44:49
  * @Description  : 
  */
 import {
@@ -126,7 +126,7 @@ export default class InsertTimePlugin extends Plugin {
                 },
                 //@ts-ignore
                 update() {
-                    this.html = `<span>${template.name} ${formatDateTime(template.template)}</span>`;
+                    this.html = `<span>${template.name} <b>${formatDateTime(template.template)}</b></span>`;
                 }
             }
         });

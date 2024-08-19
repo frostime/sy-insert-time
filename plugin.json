@@ -2,7 +2,7 @@
   "name": "sy-insert-time",
   "author": "frostime",
   "url": "https://github.com/frostime/sy-insert-time",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "minAppVersion": "3.0.12",
   "backends": ["all"],
   "frontends": ["all"],

@@ -3,7 +3,7 @@
  Author       : frostime
  Date         : 2023-07-01 19:23:50
  FilePath     : /src/components/setting-panel.svelte
- LastEditTime : 2024-08-19 00:45:57
+ LastEditTime : 2024-08-19 11:36:24
  Description  : 
 -->
 <script lang="ts">
@@ -45,13 +45,13 @@
             <button
                 class:b3-button={true}
                 on:click={() => {
-                    confirm('确认重置?', '所有模板会被重置为默认配置', () => {
+                    confirm(i18n.confirmreset[0], i18n.confirmreset[1], () => {
                         TemplatesStore.reset();
                     });
                 }}
                 style="background-color: var(--b3-card-error-background); color: var(--b3-card-error-color);"
             >
-                重置
+                {i18n.reset}
             </button>
             <button
                 class:b3-button={true}
@@ -67,7 +67,7 @@
                     });
                 }}
             >
-                新建
+                {i18n.new}
             </button>
         </div>
     </Form.Wrap>

@@ -3,7 +3,7 @@
  * @Author       : frostime
  * @Date         : 2023-08-19 18:51:23
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2024-05-01 15:21:02
+ * @LastEditTime : 2024-08-19 11:44:49
  * @Description  : 
  */
 import {
@@ -11,8 +11,14 @@ import {
     Protyle
 } from "siyuan";
 
-import { SettingUtils } from "./libs/setting-utils";
+// import { SettingUtils } from "./libs/setting-utils";
+import useTemplates from "./libs/store";
+import { DefaultTemplates } from "./libs/store";
 import "./index.scss";
+import { svelteDialog } from "./libs/dialog";
+
+import SettingPanel from "@/components/setting-panel.svelte";
+import { setI18n } from "./libs/const";
 
 let I18n = null;
 
@@ -32,6 +38,12 @@ const formatDateTime = (template: string, now?: Date) => {
     let hour = now.getHours();
     let minute = now.getMinutes();
     let second = now.getSeconds();
+    let weekday = now.getDay(); // 0 (Sunday) to 6 (Saturday)
+
+    // 星期的中文表示
+    const weekdaysInChinese = ["日", "一", "二", "三", "四", "五", "六"];
+    const weekdaysInEnglishFull = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const weekdaysInEnglishShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     return renderString(template, {
         'yyyy': year.toString(),
@@ -41,140 +53,67 @@ const formatDateTime = (template: string, now?: Date) => {
         'mm': minute.toString().padStart(2, '0'),
         'ss': second.toString().padStart(2, '0'),
         'yy': year.toString().slice(-2),
+        'e': (weekday === 0 ? 7 : weekday).toString(),
+        'EEEE': weekdaysInEnglishFull[weekday],
+        'ECN': weekdaysInChinese[weekday],
+        'E': weekdaysInEnglishShort[weekday],
     });
 }
 
-let settings: SettingUtils;
+// let settings: SettingUtils;
 
 export default class InsertTimePlugin extends Plugin {
 
     updateBindThis = this.update.bind(this);
 
-    Templates: {[key: string]: {filter: string[], name: string, enabled: boolean, template: string}} = {};
+    // Templates: {[key: string]: {filter: string[], name: string, enabled: boolean, template: string}} = {};
+
+    TemplatesStore: ReturnType<typeof useTemplates>;
 
     async onload() {
 
         I18n = this.i18n;
 
-        this.Templates = {
-            datetime: {
-                filter: ['xz', 'now'],
-                name: this.i18n.now,
-                enabled: true,
-                template: 'yyyy-MM-dd HH:mm:ss'
-            },
-            date: {
-                filter: ['rq', 'date', 'jt', 'today'],
-                name: this.i18n.date,
-                enabled: true,
-                template: 'yyyy-MM-dd'
-            },
-            time: {
-                filter: ['sj', 'time'],
-                name: this.i18n.time,
-                enabled: true,
-                template: 'HH:mm:ss'
-            }
-        };
+        setI18n(I18n);
+
+        // this.Templates = DefaultTemplates();
+        this.TemplatesStore = useTemplates(DefaultTemplates());
 
         await this.load();
         this.updateSlash();
 
-        settings = new SettingUtils({
-            plugin: this,
-            name: 'templates.json',
-            width: '700px',
-            height: '600px',
-            callback: (data) => {
-                delete data['hint'];
-                this.Templates = data;
-                this.updateSlash();
-            }
-        });
-        settings.addItem({
-            type: 'hint',
-            key: 'hint',
-            value: '',
-            title: '<span style="color: var(--b3-theme-primary); font-size: 1.25em; font-weight: bold">Hint</span>',
-            description: this.i18n.description,
-            direction: 'row'
-        });
-        for (let key in this.Templates) {
-            const Templates = this.Templates;
-            settings.addItem({
-                key: key,
-                title: key,
-                description: '',
-                type: 'custom',
-                direction: 'row',
-                value: {
-                    filter: Templates[key].filter,
-                    name: Templates[key].name,
-                    enabled: Templates[key].enabled,
-                    template: Templates[key].template
-                },
-                createElement: (currentVal) => {
-                    const html = `
-                    <div class="fn__flex conf-item" style="gap: 10px;">
-                        <div class="fn__flex-1">
-                            <span display="inline-block">Name</span>
-                            <div class="fn__space"></div>
-                            <input
-                                class="name b3-text-field fn__flex-center"
-                                type="text" value="${currentVal.name}"
-                            />
-                        </div>
-                        <div class="fn__flex-1">
-                            <span display="inline-block">${I18n.filter}</span>
-                            <div class="fn__space"></div>
-                            <input
-                                class="filter b3-text-field fn__flex-center"
-                                type="text" value="${currentVal.filter.join(',')}"
-                            />
-                        </div>
-                        <div class="fn__flex-1">
-                            <span display="inline-block">${I18n.template}</span>
-                            <div class="fn__space"></div>
-                            <input
-                                class="template b3-text-field fn__flex-center"
-                                type="text" value="${currentVal.template}"
-                            />
-                        </div>
-                        <input class="b3-switch fn__flex-center" type="checkbox" />
-                    </div>
-                    `;
-                    const div = document.createElement('div');
-                    div.innerHTML = html;
-                    (<HTMLInputElement>div.querySelector('.b3-switch')).checked = currentVal.enabled;
-                    return div.querySelector('.conf-item') as HTMLElement;
-                },
-                getEleVal: (ele) => {
-                    return {
-                        filter: (<HTMLInputElement>ele.querySelector('.filter')).value.split(',').map((item) => item.trim()),
-                        name: (<HTMLInputElement>ele.querySelector('.name')).value,
-                        template: (<HTMLInputElement>ele.querySelector('.template')).value,
-                        enabled: (<HTMLInputElement>ele.querySelector('.b3-switch')).checked
-                    }
-                },
-                setEleVal: (ele, val) => {
-                    (<HTMLInputElement>ele.querySelector('.filter')).value = val.filter.join(',');
-                    (<HTMLInputElement>ele.querySelector('.name')).value = val.name;
-                    (<HTMLInputElement>ele.querySelector('.template')).value = val.template;
-                    (<HTMLInputElement>ele.querySelector('input')).checked = val.enabled;
-                },
-            });
-        }
-
         window.addEventListener('keypress', this.updateBindThis);
+    }
+
+    openSetting() {
+        svelteDialog({
+            title:  this.name,
+            constructor: (container: HTMLElement) => {
+                return new SettingPanel({
+                    target: container,
+                    props: {
+                        TemplatesStore: this.TemplatesStore
+                    }
+                });
+            },
+            width: '750px',
+            height: '600px',
+            callback: () => {
+                this.updateSlash();
+                this.save();
+            }
+        })
     }
 
     onunload() {
         window.removeEventListener('keypress', this.updateBindThis);
-        this.saveData('templates.json', this.Templates);
+        // this.saveData('templates.json', this.TemplatesStore.dump());
     }
 
     updateSlash() {
-        let templates = Object.values(this.Templates).filter((template) => template.enabled);
+        // let templates = Object.values(this.Templates).filter((template) => template.enabled);
+        let tempVals = this.TemplatesStore.dump();
+        let templates = Object.values(tempVals).filter((template) => template.enabled);
         this.protyleSlash = templates.map((template) => {
             return {
                 filter: template.filter,
@@ -187,7 +126,7 @@ export default class InsertTimePlugin extends Plugin {
                 },
                 //@ts-ignore
                 update() {
-                    this.html = `<span>${template.name} ${formatDateTime(template.template)}</span>`;
+                    this.html = `<span>${template.name} <b>${formatDateTime(template.template)}</b></span>`;
                 }
             }
         });
@@ -195,17 +134,21 @@ export default class InsertTimePlugin extends Plugin {
 
     async load() {
         let data = await this.loadData('templates.json');
-        console.log(data);
+        console.log('Load data', data);
+        // const DefaultKeys = this.TemplatesStore.keys();
         if (data !== undefined && data !== null) {
-            for (let id in this.Templates) {
-                if (data[id] !== undefined) {
-                    this.Templates[id].template = data[id]?.template ?? this.Templates[id].template;
-                    this.Templates[id].filter = data[id]?.filter ?? this.Templates[id].filter;
-                    this.Templates[id].name = data[id]?.name ?? this.Templates[id].name;
-                    this.Templates[id].enabled = data[id]?.enabled ?? this.Templates[id].enabled;
-                }
-            }
+            let keys = Object.keys(data);
+            this.TemplatesStore.clear();
+            keys.forEach((key) => {
+                this.TemplatesStore.set(key, data[key]);
+            });
         }
+    }
+
+    async save() {
+        let data = this.TemplatesStore.dump();
+        console.log('Save data', data);
+        this.saveData('templates.json', data);
     }
 
     update(e) {

@@ -55,7 +55,7 @@
             </span>
         </div>
     </div>
-    <div class="flex" style="gap: 5px;">
+    <div class="flex row-fields" style="gap: 5px;">
         <div class="flex col">
             <span>Name</span>
             <input
@@ -88,6 +88,25 @@
 <style lang="scss">
     .row1 .toolbar__item:hover {
         color: var(--b3-theme-primary);
+    }
+
+    // 移动端不加载 base.scss，toolbar__item 的图标尺寸会退化为 svg 默认尺寸（巨大）
+    .row1 .toolbar__item svg {
+        width: 15.5px;
+        height: 15.5px;
+    }
+
+    // 窄面板（移动端）下允许换行，flex-basis 决定何时换行，min-width 让 input 可收缩而非撑破面板
+    .row-fields {
+        flex-wrap: wrap;
+    }
+    .row-fields .flex-1 {
+        flex: 1 1 120px;
+        min-width: 0;
+    }
+    .row-fields .flex-2 {
+        flex: 2 1 200px;
+        min-width: 0;
     }
 
     .flex {

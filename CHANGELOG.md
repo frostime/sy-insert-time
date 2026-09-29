@@ -1,3 +1,7 @@
+## 3.0.1
+
+* [#8](https://github.com/frostime/sy-insert-time/pull/8) 修复移动端删除按钮图标过大与窄面板下「插入模板」输入框被截断的问题（by [@wmy2981](https://github.com/wmy2981)）
+
 ## 0.2.0
 
 * [Add plugin event bus `open-siyuan-url-plugin` and `open-siyuan-url-block`](https://github.com/siyuan-note/siyuan/pull/8927)

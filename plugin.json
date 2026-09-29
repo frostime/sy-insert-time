@@ -4,19 +4,23 @@
   "url": "https://github.com/frostime/sy-insert-time",
   "version": "3.0.1",
   "minAppVersion": "3.0.12",
-  "backends": ["all"],
-  "frontends": ["all"],
+  "backends": [
+    "all"
+  ],
+  "frontends": [
+    "all"
+  ],
   "displayName": {
-    "en_US": "Insert time",
-    "zh_CN": "插入时间"
+    "default": "Insert time",
+    "zh-CN": "插入时间"
   },
   "description": {
-    "en_US": "Insert current time in editor",
-    "zh_CN": "在编辑器中快速插入当前的时间"
+    "default": "Insert current time in editor",
+    "zh-CN": "在编辑器中快速插入当前的时间"
   },
   "readme": {
-    "en_US": "README.md",
-    "zh_CN": "README_zh_CN.md"
+    "default": "README.md",
+    "zh-CN": "README_zh_CN.md"
   },
   "funding": {
     "custom": [

@@ -5,55 +5,52 @@ on:
     tags:
       - "v*"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      # Checkout
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Install Node.js
-      - name: Install Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          registry-url: "https://registry.npmjs.org"
-
-        # Install pnpm
       - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        id: pnpm-install
+        uses: pnpm/action-setup@v4
         with:
-          version: 8
-          run_install: false
+          version: 11
 
-      # Get pnpm store directory
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+        run: echo "STORE_PATH=$(pnpm store path)" >> "$GITHUB_OUTPUT"
 
-      # Setup pnpm cache
       - name: Setup pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('package.json') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      # Install dependencies
       - name: Install dependencies
         run: pnpm install
 
-      # Build for production, 这一步会生成一个 package.zip
+      - name: Type check
+        run: pnpm typecheck
+
+      # 这一步会生成 package.zip
       - name: Build for production
         run: pnpm build
 
       - name: Release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@v2
         with:
           allowUpdates: true
           artifactErrorsFailBuild: true

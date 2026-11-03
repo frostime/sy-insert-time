@@ -2,7 +2,7 @@
   "name": "sy-insert-time",
   "author": "frostime",
   "url": "https://github.com/frostime/sy-insert-time",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "minAppVersion": "3.0.12",
   "backends": [
     "all"
@@ -22,6 +22,17 @@
     "default": "README.md",
     "zh-CN": "README_zh_CN.md"
   },
+  "icon": "icon.png",
+  "preview": "preview.png",
+  "keywords": [
+    "time",
+    "date",
+    "now",
+    "insert",
+    "时间",
+    "日期",
+    "插入"
+  ],
   "funding": {
     "custom": [
       "https://afdian.net/a/frostime"

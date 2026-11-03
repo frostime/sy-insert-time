@@ -1,162 +1,161 @@
-/*
- * Copyright (c) 2023 by frostime. All Rights Reserved.
- * @Author       : frostime
- * @Date         : 2023-08-19 18:51:23
- * @FilePath     : /src/index.ts
- * @LastEditTime : 2024-08-19 11:44:49
- * @Description  : 
- */
 import {
-    Plugin,
-    Protyle
+    Plugin, Protyle, confirm, getActiveEditor, getFrontend,
+    type Dialog, type ICommand, type ICommandContext, type IProtyle,
 } from "siyuan";
 
-// import { SettingUtils } from "./libs/setting-utils";
-import useTemplates from "./libs/store";
-import { DefaultTemplates } from "./libs/store";
-import "./index.scss";
+import { COMMAND_PREFIX, setI18n } from "./libs/const";
+import { formatDateTime } from "./libs/format";
 import { svelteDialog } from "./libs/dialog";
-
+import { DefaultTemplates, type ITemplate } from "./libs/store";
 import SettingPanel from "@/components/setting-panel.svelte";
-import { setI18n } from "./libs/const";
 
-let I18n = null;
+/** 斜杠项除了插件的字段，还带一个给基类调用的 update */
+type TPluginSlash = Plugin["protyleSlash"][number] & { update: () => void };
 
-
-const renderString = (template: string, data: { [key: string]: string }) => {
-    for (let key in data) {
-        template = template.replace(key, data[key]);
-    }
-    return template;
-}
-
-const formatDateTime = (template: string, now?: Date) => {
-    now = now || new Date();
-    let year = now.getFullYear();
-    let month = now.getMonth() + 1;
-    let day = now.getDate();
-    let hour = now.getHours();
-    let minute = now.getMinutes();
-    let second = now.getSeconds();
-    let weekday = now.getDay(); // 0 (Sunday) to 6 (Saturday)
-
-    // 星期的中文表示
-    const weekdaysInChinese = ["日", "一", "二", "三", "四", "五", "六"];
-    const weekdaysInEnglishFull = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const weekdaysInEnglishShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-    return renderString(template, {
-        'yyyy': year.toString(),
-        'MM': month.toString().padStart(2, '0'),
-        'dd': day.toString().padStart(2, '0'),
-        'HH': hour.toString().padStart(2, '0'),
-        'mm': minute.toString().padStart(2, '0'),
-        'ss': second.toString().padStart(2, '0'),
-        'yy': year.toString().slice(-2),
-        'e': (weekday === 0 ? 7 : weekday).toString(),
-        'EEEE': weekdaysInEnglishFull[weekday],
-        'ECN': weekdaysInChinese[weekday],
-        'E': weekdaysInEnglishShort[weekday],
-    });
-}
-
-// let settings: SettingUtils;
+const escapeHtml = (text: string) => text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 
 export default class InsertTimePlugin extends Plugin {
 
-    updateBindThis = this.update.bind(this);
-
-    // Templates: {[key: string]: {filter: string[], name: string, enabled: boolean, template: string}} = {};
-
-    TemplatesStore: ReturnType<typeof useTemplates>;
+    private updateBindThis = this.update.bind(this);
+    private templates: Record<string, ITemplate> = {};
+    /** 每个模板注册过一次命令就不能重复注册，这里记住已经注册过的对象，改名时原地更新 */
+    private templateCommands = new Map<string, ICommand>();
 
     async onload() {
-
-        I18n = this.i18n;
-
-        setI18n(I18n);
-
-        // this.Templates = DefaultTemplates();
-        this.TemplatesStore = useTemplates(DefaultTemplates());
+        setI18n(this.i18n as typeof import("@/i18n/zh_CN.json"));
+        this.templates = DefaultTemplates();
 
         await this.load();
-        this.updateSlash();
+        this.refreshSlash();
+        this.registerCommands();
 
         window.addEventListener('keypress', this.updateBindThis);
     }
 
-    openSetting() {
-        svelteDialog({
-            title:  this.name,
-            constructor: (container: HTMLElement) => {
-                return new SettingPanel({
-                    target: container,
-                    props: {
-                        TemplatesStore: this.TemplatesStore
-                    }
-                });
-            },
-            width: '750px',
-            height: '600px',
-            callback: () => {
-                this.updateSlash();
-                this.save();
-            }
-        })
-    }
-
     onunload() {
         window.removeEventListener('keypress', this.updateBindThis);
-        // this.saveData('templates.json', this.TemplatesStore.dump());
     }
 
-    updateSlash() {
-        // let templates = Object.values(this.Templates).filter((template) => template.enabled);
-        let tempVals = this.TemplatesStore.dump();
-        let templates = Object.values(tempVals).filter((template) => template.enabled);
-        this.protyleSlash = templates.map((template) => {
-            return {
-                filter: template.filter,
-                html: `<span>${template.name} ${formatDateTime(template.template)}</span>`,
-                id: template.name,
-                callback: (protyle: Protyle) => {
-                    let strnow = formatDateTime(template.template);
-                    console.log(template.name, strnow);
-                    protyle.insert(strnow, false);
+    openSetting() {
+        let forceClose = false;
+        let dialog: Dialog | undefined;
+        let panel: SettingPanel | undefined;
+
+        const close = (discardChanges: boolean) => {
+            forceClose = discardChanges;
+            dialog?.destroy();
+        };
+
+        const opened = svelteDialog({
+            title: this.displayName || this.name,
+            width: getFrontend().endsWith("mobile") ? "92vw" : "800px",
+            height: getFrontend().endsWith("mobile") ? "82vh" : "640px",
+            beforeClose: () => {
+                if (forceClose || !panel?.isDirty()) return true;
+                confirm(this.i18n.unsavedTitle as string, this.i18n.unsavedBody as string, () => close(true));
+                return false;
+            },
+            createComponent: (container) => new SettingPanel({
+                target: container,
+                props: {
+                    templates: this.templates,
+                    pluginName: this.name,
+                    onSave: (templates: Record<string, ITemplate>) => {
+                        this.templates = templates;
+                        void this.save();
+                        this.refreshSlash();
+                        this.registerCommands();
+                        close(true);
+                    },
+                    onCancel: () => close(true),
                 },
-                //@ts-ignore
-                update() {
-                    this.html = `<span>${template.name} <b>${formatDateTime(template.template)}</b></span>`;
-                }
+            }),
+        });
+
+        dialog = opened.dialog;
+        panel = opened.component;
+    }
+
+    /** 斜杠菜单：每行显示模板名和当前的插入结果 */
+    private refreshSlash() {
+        this.protyleSlash = Object.entries(this.templates)
+            .filter(([, template]) => template.enabled)
+            .map<TPluginSlash>(([key, template]) => {
+                const name = escapeHtml(template.name);
+                return {
+                    filter: template.filter,
+                    id: key,
+                    html: `<span>${name} ${formatDateTime(template.template)}</span>`,
+                    callback: (protyle: Protyle) => {
+                        const current = this.templates[key];
+                        if (!current || !current.enabled) return;
+                        protyle.insert(formatDateTime(current.template), false);
+                    },
+                    update() {
+                        this.html = `<span>${name} <b>${formatDateTime(template.template)}</b></span>`;
+                    },
+                };
+            });
+    }
+
+    /**
+     * 为每个模板注册一条命令，快捷键由用户在思源「设置 → 快捷键」里绑定。
+     * 同一个 langKey 重复注册会被思源拒绝，所以只注册一次，之后只更新显示名。
+     */
+    private registerCommands() {
+        Object.entries(this.templates).forEach(([key, template]) => {
+            const registered = this.templateCommands.get(key);
+            if (registered) {
+                registered.langText = template.name;
+                return;
             }
+            const command: ICommand = {
+                langKey: `${COMMAND_PREFIX}${key}`,
+                langText: template.name,
+                hotkey: "",
+                // 快捷键走 editorCallback；旧版命令面板只认 callback，两个都给，新版不会重复触发
+                callback: (context?: ICommandContext) => this.insertTemplate(key, context?.protyle),
+                editorCallback: (protyle: IProtyle) => this.insertTemplate(key, protyle),
+            };
+            this.templateCommands.set(key, command);
+            this.addCommand(command);
         });
     }
 
-    async load() {
-        let data = await this.loadData('templates.json');
-        console.log('Load data', data);
-        // const DefaultKeys = this.TemplatesStore.keys();
-        if (data !== undefined && data !== null) {
-            let keys = Object.keys(data);
-            this.TemplatesStore.clear();
-            keys.forEach((key) => {
-                this.TemplatesStore.set(key, data[key]);
-            });
+    private insertTemplate(key: string, protyle?: IProtyle) {
+        const template = this.templates[key];
+        if (!template || !template.enabled) return;
+        // 命令回调拿到的是内部 IProtyle，insert 在它对应的 Protyle 实例上
+        const editor = protyle?.getInstance?.() ?? this.activeEditor();
+        if (!editor?.insert) return;
+        editor.insert(formatDateTime(template.template), false);
+    }
+
+    private activeEditor(): Protyle | undefined {
+        try {
+            return getActiveEditor();
+        } catch (error) {
+            return undefined;
         }
     }
 
-    async save() {
-        let data = this.TemplatesStore.dump();
-        console.log('Save data', data);
-        this.saveData('templates.json', data);
+    private async load() {
+        const data = await this.loadData('templates.json');
+        if (data && typeof data === "object") {
+            this.templates = data as Record<string, ITemplate>;
+        }
     }
 
-    update(e) {
-        if (e.key === '/') {
-            this.protyleSlash.forEach((slash) => {
-                //@ts-ignore
-                slash.update();
-            })
-        }
+    private async save() {
+        await this.saveData('templates.json', this.templates);
+    }
+
+    private update(event: KeyboardEvent) {
+        if (event.key !== "/") return;
+        this.protyleSlash.forEach(slash => (slash as TPluginSlash).update?.());
     }
 }

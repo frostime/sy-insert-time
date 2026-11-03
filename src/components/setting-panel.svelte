@@ -53,8 +53,11 @@
         return () => clearInterval(timer);
     });
 
-    /** 编译期拿不到 tab 参数的类型，但运行时 openSetting 支持直接跳到快捷键页 */
-    const openSettingWithTab = openSetting as unknown as (app: unknown, tab?: string) => void;
+    /**
+     * 插件 API 暴露的 openSetting(app) 不接受 tab 参数（对应的是内部 openPluginSetting），
+     * 所以打开设置后手动切到快捷键页。
+     */
+    const openSettingDialog = openSetting as unknown as (app: unknown) => { element?: HTMLElement } | undefined;
 
     function readHotkeys(): Record<string, string> {
         const pluginKeymap = (window.siyuan?.config?.keymap?.plugin ?? {}) as Record<string,
@@ -155,7 +158,10 @@
 
     function openShortcutSettings() {
         const app = (window.siyuan as unknown as { ws?: { app?: unknown } }).ws?.app ?? window.siyuan;
-        openSettingWithTab(app, "keymap");
+        const dialog = openSettingDialog(app);
+        dialog?.element
+            ?.querySelector<HTMLElement>('.config__side .b3-list-item[data-name="keymap"]')
+            ?.click();
         revealCommandRows();
     }
 
